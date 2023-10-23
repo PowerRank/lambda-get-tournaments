@@ -4,15 +4,22 @@ import os
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ['TABLE_NAME'])
 
 def lambda_handler(event, context):
-    response = table.query(
-        ProjectionExpression='TournamentId,#n',
-        KeyConditionExpression=Key('PK').eq('Tournament'),
-        ExpressionAttributeNames = {'#n': 'Name'}
-    )
-    tournaments = response['Items']
-    for tournament in tournaments:
-        tournament['tournamentId']=int(tournament['tournamentId'])
-    return {'statusCode': 200, 'body':json.dumps(tournaments)}
+    try:
+        table = dynamodb.Table(os.environ['TABLE_NAME'])
+        response = table.query(
+            ProjectionExpression='TournamentId,#n',
+            KeyConditionExpression=Key('PK').eq('Tournament'),
+            ExpressionAttributeNames = {'#n': 'Name'}
+        )
+        return {
+            'statusCode': 200, 
+            'body':json.dumps(response['Items'])
+        }
+    except Exception as e:
+        print(f'Exception: {e}')
+    return {
+            'statusCode': 500,
+            'body': json.dumps('Invalid Request')
+        }
